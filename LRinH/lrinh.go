@@ -1,5 +1,5 @@
 // Largest Rectangle in Histogram
-// need to improved !!!
+// need to improve !!!
 package LRinH
 
 import (
@@ -11,55 +11,50 @@ type rectUnit struct {
 	Count int
 }
 
-func checkPassArea(h int, arr []rectUnit) (lr int, ret []rectUnit) {
-	tmp := rectUnit{
-		Data:  h,
-		Count: 1,
-	}
+func checkPassArea(ntmp rectUnit, arr []rectUnit) (lr int, ret []rectUnit) {
+	historyLargeCount := 0
 	for _, kk := range arr {
-		if h == kk.Data {
-			tmp.Count = kk.Count + 1
-			continue
-		} else if h > kk.Data {
-			kk.Count++
+		if ntmp.Data > kk.Data {
+			kk.Count = kk.Count + ntmp.Count
 			ret = append(ret, kk)
-			// fmt.Println(h, " >= ", kk.Data, " ", ret)
-			tmp.Count = 1
+			// fmt.Println(ntmp.Data, " >= ", kk.Data, " ", ret)
 			continue
 		}
-
 		end := kk.Data * kk.Count
 		if lr <= end {
 			lr = end
 		}
-		if tmp.Count < kk.Count+1 {
-			tmp.Count = kk.Count + 1
+
+		if kk.Count > historyLargeCount {
+			historyLargeCount = kk.Count
 		}
+		// fmt.Println("finish >> ", kk.Data, " : ", kk.Count, " History :", historyLargeCount)
 	}
-	ret = append(ret, tmp)
-	// fmt.Println("Final ", ret)
+	// only 0 need to be checked
+	if ntmp.Data != 0 {
+		ntmp.Count = ntmp.Count + historyLargeCount
+		// fmt.Println("Add >> ", ntmp.Data, " : ", ntmp.Count)
+		ret = append(ret, ntmp)
+	}
+
+	// fmt.Println("Final ", ret, " ", lr)
 	return
 }
 
-func largestRectangleArea(heights []int) int {
+func calculateRectArea(heights []int, count []int) int {
 	larg := 0
 	lr := 0
 	var tmp []rectUnit
-
-	if len(heights) == 0 {
-		return 0
-	}
-
-	if len(heights) == 1 {
-		return heights[0]
-	}
-
 	tmp = append(tmp, rectUnit{
 		Data:  heights[0],
-		Count: 1,
+		Count: count[0],
 	})
-	for _, vv := range heights[1:] {
-		lr, tmp = checkPassArea(vv, tmp)
+	for ii, vv := range heights[1:] {
+		now := rectUnit{
+			Data:  vv,
+			Count: count[ii+1],
+		}
+		lr, tmp = checkPassArea(now, tmp)
 		if lr > larg {
 			larg = lr
 		}
@@ -74,12 +69,46 @@ func largestRectangleArea(heights []int) int {
 	return larg
 }
 
+func prepareArray(heights []int) (result []int, count []int) {
+	last := heights[0]
+	ind := 0
+	result = append(result, heights[0])
+	count = append(count, 1)
+	for _, vv := range heights[1:] {
+		if vv == last {
+			count[ind]++
+			continue
+		}
+		last = vv
+		ind = len(result)
+		result = append(result, vv)
+		count = append(count, 1)
+	}
+	// fmt.Println("after prepare ", result, " ", count)
+	return
+}
+
+func largestRectangleArea(heights []int) int {
+	if len(heights) == 0 {
+		return 0
+	}
+
+	if len(heights) == 1 {
+		return heights[0]
+	}
+	data, cout := prepareArray(heights)
+	return calculateRectArea(data, cout)
+}
+
 func LargeTest() {
-	// fmt.Println(largestRectangleArea([]int{2, 1, 5, 6, 2, 3}))
-	fmt.Println(largestRectangleArea([]int{2, 2, 2, 2, 2}))
-	// fmt.Println(largestRectangleArea([]int{1, 2, 3, 4, 5}))
-	// fmt.Println(largestRectangleArea([]int{5, 4, 3, 2, 1}))
-	// fmt.Println(largestRectangleArea([]int{3, 2, 1}))
-	fmt.Println(largestRectangleArea([]int{3, 6, 5, 7, 4, 8, 1, 0}))
-	// fmt.Println(largestRectangleArea([]int{1, 2, 3, 100, 5}))
+	fmt.Println(largestRectangleAreaV2([]int{2, 1, 2, 0, 3, 2, 2, 3}))
+	fmt.Println(largestRectangleAreaV2([]int{2, 2, 2, 2, 2, 2, 2, 2}))
+	fmt.Println(largestRectangleAreaV2([]int{0, 0, 0, 0, 0, 0, 0}))
+	fmt.Println(largestRectangleAreaV2([]int{0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1}))
+	fmt.Println(largestRectangleAreaV2([]int{1, 2, 3, 4, 5}))
+	fmt.Println(largestRectangleAreaV2([]int{5, 4, 3, 2, 1}))
+	fmt.Println(largestRectangleAreaV2([]int{3, 2, 1}))
+	fmt.Println(largestRectangleAreaV2([]int{3, 6, 5, 7, 4, 8, 1, 0}))
+	fmt.Println(largestRectangleAreaV2([]int{1, 2, 3, 100, 5}))
+	fmt.Println(largestRectangleAreaV2([]int{3, 5, 5, 2, 5, 5, 6, 6, 4, 4, 1, 1, 2, 5, 5, 6, 6, 4, 1, 3}))
 }
